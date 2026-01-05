@@ -168,46 +168,45 @@ export function EntryFormDialog({
   async function onSubmit(data: EntryFormValues) {
     if (checkRateLimit()) return
 
-    try {
-      const startDateTime = new Date(`${data.startDate}T${data.startTime}`)
-      const endDateTime = new Date(`${data.endDate}T${data.endTime}`)
+    const startDateTime = new Date(`${data.startDate}T${data.startTime}`)
+    const endDateTime = new Date(`${data.endDate}T${data.endTime}`)
 
-      const payload = {
-        taskId: data.taskId,
-        comment: data.comment,
-        start: startDateTime.toISOString(),
-        end: endDateTime.toISOString(),
-      }
-      if (entry && entry.id) {
-        await updateTimeEntry({ id: entry.id, ...payload })
-        toast.success('Time entry updated', {
-          description: `Entry #${entry.id} has been successfully updated.`,
-        })
-      } else {
-        const newEntry = await createTimeEntry(payload)
-        toast.success('Time entry created', {
-          description: `New Entry #${newEntry.id} has been successfully created.`,
-        })
-      }
-      setIsOpen(false)
-      form.reset()
-      router.refresh()
-    } catch (error) {
-      console.error('Failed to submit entry', error)
-      let errorMsg = 'Unknown error'
-      if (error instanceof Error) {
-        try {
-          const parsed = JSON.parse(error.message)
-          errorMsg = parsed.error || error.message
-        } catch {
-          errorMsg = error.message
-        }
-      }
-      if (errorMsg.includes('Too many requests')) {
+    const payload = {
+      taskId: data.taskId,
+      comment: data.comment,
+      start: startDateTime.toISOString(),
+      end: endDateTime.toISOString(),
+    }
+
+    let result
+    if (entry && entry.id) {
+      result = await updateTimeEntry({ id: entry.id, ...payload })
+    } else {
+      result = await createTimeEntry(payload)
+    }
+
+    if (!result.success) {
+      console.error('Failed to submit entry', result.error)
+      if (result.error.includes('Too many requests')) {
         reportRateLimit()
       }
-      toast.error(`Failed to submit entry: ${errorMsg}`)
+      toast.error(`Failed to submit entry: ${result.error}`)
+      return
     }
+
+    if (entry && entry.id) {
+      toast.success('Time entry updated', {
+        description: `Entry #${entry.id} has been successfully updated.`,
+      })
+    } else {
+      toast.success('Time entry created', {
+        description: `New Entry #${result.data.id} has been successfully created.`,
+      })
+    }
+
+    setIsOpen(false)
+    form.reset()
+    router.refresh()
   }
 
   return (

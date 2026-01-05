@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Client, Project } from '@/types/api'
 import { getProjects } from '@/actions/clients'
 import { ChevronRight, ChevronDown, Building2 } from 'lucide-react'
@@ -25,32 +25,25 @@ export function ClientTreeItem({ client }: ClientTreeItemProps) {
   const [error, setError] = useState<string | null>(null)
   const { checkRateLimit, reportRateLimit } = useRateLimit()
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = async () => {
     setIsLoading(true)
     setError(null)
-    try {
-      const fetchedProjects = await getProjects(client.id)
-      setProjects(fetchedProjects)
-      setHasLoaded(true)
-    } catch (error) {
-      console.error('Failed to load projects', error)
-      let msg = 'Failed to load projects'
-      if (error instanceof Error) {
-        try {
-          const parsed = JSON.parse(error.message)
-          msg = parsed.error || error.message
-        } catch {
-          msg = error.message
-        }
-      }
-      if (msg.includes('Too many requests')) {
+
+    const result = await getProjects(client.id)
+
+    if (!result.success) {
+      console.error('Failed to load projects', result.error)
+      if (result.error.includes('Too many requests')) {
         reportRateLimit()
       }
-      setError(msg)
-    } finally {
-      setIsLoading(false)
+      setError(result.error)
+    } else {
+      setProjects(result.data)
+      setHasLoaded(true)
     }
-  }, [client.id, reportRateLimit])
+
+    setIsLoading(false)
+  }
 
   const handleToggle = async () => {
     const nextOpen = !isOpen

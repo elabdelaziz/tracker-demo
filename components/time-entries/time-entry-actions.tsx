@@ -36,14 +36,15 @@ export function TimeEntryActions({ entry }: TimeEntryActionsProps) {
   const router = useRouter()
 
   const handleDelete = async () => {
-    try {
-      await deleteTimeEntry(entry.id)
+    const result = await deleteTimeEntry(entry.id)
+
+    if (result.success) {
       router.refresh()
       toast.success('Time entry deleted')
-    } catch (error) {
-      console.error('Failed to delete entry', error)
+    } else {
+      console.error('Failed to delete entry', result.error)
       toast.error('Failed to delete entry', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: result.error,
       })
     }
   }

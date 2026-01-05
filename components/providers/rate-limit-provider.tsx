@@ -71,7 +71,7 @@ export function RateLimitProvider({ children }: { children: React.ReactNode }) {
     return null
   })
 
-  // Show toast on mount if rate limited (separate effect for side effect)
+  // Show toast on mount if rate limited
   useEffect(() => {
     if (hasInitialized.current) return
     hasInitialized.current = true

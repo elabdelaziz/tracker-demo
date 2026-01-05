@@ -14,59 +14,99 @@ const headers = {
   'Content-Type': 'application/json',
 }
 
-export async function getClients(params?: PaginationParams): Promise<Client[]> {
-  const query = new URLSearchParams()
-  if (params?.limit) query.append('limit', params.limit.toString())
-  if (params?.offset) query.append('offset', params.offset.toString())
-  if (params?.sortBy) query.append('sortBy', params.sortBy)
-  if (params?.order) query.append('order', params.order)
+type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string }
 
-  const response = await fetch(`${API_URL}/clients?${query.toString()}`, {
-    headers,
-    next: { revalidate: 60 },
-  })
+export async function getClients(
+  params?: PaginationParams
+): Promise<ActionResult<Client[]>> {
+  try {
+    const query = new URLSearchParams()
+    if (params?.limit) query.append('limit', params.limit.toString())
+    if (params?.offset) query.append('offset', params.offset.toString())
+    if (params?.sortBy) query.append('sortBy', params.sortBy)
+    if (params?.order) query.append('order', params.order)
 
-  if (!response.ok) {
-    const errorBody = await response.text()
-    console.error('Failed to fetch clients', errorBody)
-    throw new Error(errorBody || 'Failed to fetch clients')
-  }
-
-  return response.json()
-}
-
-export async function getProjects(clientId: number): Promise<Project[]> {
-  const response = await fetch(
-    `${API_URL}/clients/${clientId}/projects?sortBy=id&order=asc`,
-    {
+    const response = await fetch(`${API_URL}/clients?${query.toString()}`, {
       headers,
       next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error('Failed to fetch clients', errorBody)
+      if (response.status === 429 || errorBody.includes('Too many requests')) {
+        return { success: false, error: 'Too many requests' }
+      }
+      return { success: false, error: errorBody || 'Failed to fetch clients' }
     }
-  )
 
-  if (!response.ok) {
-    const errorBody = await response.text()
-    console.error(`Failed to fetch projects for client ${clientId}`, errorBody)
-    throw new Error(errorBody || 'Failed to fetch projects')
+    const data = await response.json()
+    return { success: true, data }
+  } catch (err) {
+    console.error('Error fetching clients', err)
+    return { success: false, error: 'Failed to fetch clients' }
   }
-
-  return response.json()
 }
 
-export async function getTasks(projectId: number): Promise<Task[]> {
-  const response = await fetch(
-    `${API_URL}/projects/${projectId}/tasks?sortBy=name&order=asc`,
-    {
-      headers,
-      next: { revalidate: 60 },
+export async function getProjects(
+  clientId: number
+): Promise<ActionResult<Project[]>> {
+  try {
+    const response = await fetch(
+      `${API_URL}/clients/${clientId}/projects?sortBy=id&order=asc`,
+      {
+        headers,
+        next: { revalidate: 60 },
+      }
+    )
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error(
+        `Failed to fetch projects for client ${clientId}`,
+        errorBody
+      )
+      if (response.status === 429 || errorBody.includes('Too many requests')) {
+        return { success: false, error: 'Too many requests' }
+      }
+      return { success: false, error: errorBody || 'Failed to fetch projects' }
     }
-  )
 
-  if (!response.ok) {
-    const errorBody = await response.text()
-    console.error(`Failed to fetch tasks for project ${projectId}`, errorBody)
-    throw new Error(errorBody || 'Failed to fetch tasks')
+    const data = await response.json()
+    return { success: true, data }
+  } catch (err) {
+    console.error('Error fetching projects', err)
+    return { success: false, error: 'Failed to fetch projects' }
   }
+}
 
-  return response.json()
+export async function getTasks(
+  projectId: number
+): Promise<ActionResult<Task[]>> {
+  try {
+    const response = await fetch(
+      `${API_URL}/projects/${projectId}/tasks?sortBy=name&order=asc`,
+      {
+        headers,
+        next: { revalidate: 60 },
+      }
+    )
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      console.error(`Failed to fetch tasks for project ${projectId}`, errorBody)
+      if (response.status === 429 || errorBody.includes('Too many requests')) {
+        return { success: false, error: 'Too many requests' }
+      }
+      return { success: false, error: errorBody || 'Failed to fetch tasks' }
+    }
+
+    const data = await response.json()
+    return { success: true, data }
+  } catch (err) {
+    console.error('Error fetching tasks', err)
+    return { success: false, error: 'Failed to fetch tasks' }
+  }
 }
