@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react'
 import { toast } from 'sonner'
 
@@ -21,7 +22,7 @@ const RateLimitContext = createContext<RateLimitContextType | undefined>(
 )
 
 const RateLimitToastContent = ({ resetTime }: { resetTime: number }) => {
-  const [seconds, setSeconds] = useState(
+  const [seconds, setSeconds] = useState(() =>
     Math.max(0, Math.ceil((resetTime - Date.now()) / 1000))
   )
 
@@ -42,33 +43,52 @@ const RateLimitToastContent = ({ resetTime }: { resetTime: number }) => {
 }
 
 export function RateLimitProvider({ children }: { children: React.ReactNode }) {
-  const [isRateLimited, setIsRateLimited] = useState(false)
-  const [limitResetTime, setLimitResetTime] = useState<number | null>(null)
-
-  useEffect(() => {
-    // Check localStorage on mount
+  const hasInitialized = useRef(false)
+  const [isRateLimited, setIsRateLimited] = useState(() => {
+    // Initialize from localStorage during first render
+    if (typeof window === 'undefined') return false
     const savedResetTime = localStorage.getItem('rateLimitResetTime')
     if (savedResetTime) {
       const resetTime = parseInt(savedResetTime, 10)
       if (resetTime > Date.now()) {
-        setIsRateLimited(true)
-        setLimitResetTime(resetTime)
-
-        toast.error('Rate limit exceeded', {
-          id: 'rate-limit-toast',
-          description: <RateLimitToastContent resetTime={resetTime} />,
-          duration: Infinity,
-          closeButton: true,
-          action: {
-            label: 'Dismiss',
-            onClick: () => toast.dismiss('rate-limit-toast'),
-          },
-        })
+        return true
       } else {
         localStorage.removeItem('rateLimitResetTime')
       }
     }
-  }, [])
+    return false
+  })
+  const [limitResetTime, setLimitResetTime] = useState<number | null>(() => {
+    // Initialize from localStorage during first render
+    if (typeof window === 'undefined') return null
+    const savedResetTime = localStorage.getItem('rateLimitResetTime')
+    if (savedResetTime) {
+      const resetTime = parseInt(savedResetTime, 10)
+      if (resetTime > Date.now()) {
+        return resetTime
+      }
+    }
+    return null
+  })
+
+  // Show toast on mount if rate limited (separate effect for side effect)
+  useEffect(() => {
+    if (hasInitialized.current) return
+    hasInitialized.current = true
+
+    if (isRateLimited && limitResetTime) {
+      toast.error('Rate limit exceeded', {
+        id: 'rate-limit-toast',
+        description: <RateLimitToastContent resetTime={limitResetTime} />,
+        duration: Infinity,
+        closeButton: true,
+        action: {
+          label: 'Dismiss',
+          onClick: () => toast.dismiss('rate-limit-toast'),
+        },
+      })
+    }
+  }, [isRateLimited, limitResetTime])
 
   useEffect(() => {
     let timeout: NodeJS.Timeout

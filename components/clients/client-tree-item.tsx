@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Client, Project } from '@/types/api'
 import { getProjects } from '@/actions/clients'
 import { ChevronRight, ChevronDown, Building2 } from 'lucide-react'
@@ -23,9 +23,9 @@ export function ClientTreeItem({ client }: ClientTreeItemProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { checkRateLimit, reportRateLimit, isRateLimited } = useRateLimit()
+  const { checkRateLimit, reportRateLimit } = useRateLimit()
 
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -50,7 +50,7 @@ export function ClientTreeItem({ client }: ClientTreeItemProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [client.id, reportRateLimit])
 
   const handleToggle = async () => {
     const nextOpen = !isOpen
@@ -66,17 +66,16 @@ export function ClientTreeItem({ client }: ClientTreeItemProps) {
     }
   }
 
-  // Auto-retry when rate limit is lifted
+  // Auto-close entries opened during rate limit after 5 seconds
   useEffect(() => {
-    if (
-      !isRateLimited &&
-      isOpen &&
-      !hasLoaded &&
-      error?.includes('Too many requests')
-    ) {
-      loadProjects()
+    if (isOpen && error?.includes('Too many requests')) {
+      const timeout = setTimeout(() => {
+        setIsOpen(false)
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timeout)
     }
-  }, [isRateLimited, isOpen, hasLoaded, error])
+  }, [isOpen, error])
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">

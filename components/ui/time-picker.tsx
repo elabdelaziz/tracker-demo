@@ -106,16 +106,14 @@ export function TimePicker({
   )
 
   // Generate minutes (00, 05, 10, ..., 55) plus current minute if not in list
-  const baseMinuteOptions = Array.from({ length: 12 }, (_, i) =>
-    String(i * 5).padStart(2, '0')
-  )
   const minuteOptions = React.useMemo(() => {
-    if (minute && !baseMinuteOptions.includes(minute)) {
-      return [...baseMinuteOptions, minute].sort(
-        (a, b) => Number(a) - Number(b)
-      )
+    const baseOptions = Array.from({ length: 12 }, (_, i) =>
+      String(i * 5).padStart(2, '0')
+    )
+    if (minute && !baseOptions.includes(minute)) {
+      return [...baseOptions, minute].sort((a, b) => Number(a) - Number(b))
     }
-    return baseMinuteOptions
+    return baseOptions
   }, [minute])
 
   return (

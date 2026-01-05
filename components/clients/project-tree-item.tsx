@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Project, Task } from '@/types/api'
 import { getTasks } from '@/actions/clients'
 import { ChevronRight, ChevronDown, Folder } from 'lucide-react'
@@ -23,9 +23,9 @@ export function ProjectTreeItem({ project }: ProjectTreeItemProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { checkRateLimit, reportRateLimit, isRateLimited } = useRateLimit()
+  const { checkRateLimit, reportRateLimit } = useRateLimit()
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -50,7 +50,7 @@ export function ProjectTreeItem({ project }: ProjectTreeItemProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [project.id, reportRateLimit])
 
   const handleToggle = async () => {
     const nextOpen = !isOpen
@@ -66,17 +66,16 @@ export function ProjectTreeItem({ project }: ProjectTreeItemProps) {
     }
   }
 
-  // Auto-retry when rate limit is lifted
+  // Auto-close entries opened during rate limit after 5 seconds
   useEffect(() => {
-    if (
-      !isRateLimited &&
-      isOpen &&
-      !hasLoaded &&
-      error?.includes('Too many requests')
-    ) {
-      loadTasks()
+    if (isOpen && error?.includes('Too many requests')) {
+      const timeout = setTimeout(() => {
+        setIsOpen(false)
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timeout)
     }
-  }, [isRateLimited, isOpen, hasLoaded, error])
+  }, [isOpen, error])
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">

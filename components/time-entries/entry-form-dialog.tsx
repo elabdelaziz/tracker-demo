@@ -106,6 +106,7 @@ export function EntryFormDialog({
     const now = new Date()
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
     return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       taskId: '' as any,
       comment: '',
       startDate: getLocalDateString(oneHourAgo),
@@ -116,10 +117,12 @@ export function EntryFormDialog({
   }
 
   const form = useForm<EntryFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(entrySchema) as any,
     defaultValues: getDefaultValues(),
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form's watch() is intentionally reactive
   const watchStartDate = form.watch('startDate')
   const watchStartTime = form.watch('startTime')
   const watchEndDate = form.watch('endDate')
@@ -151,6 +154,7 @@ export function EntryFormDialog({
       const now = new Date()
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
       form.reset({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         taskId: '' as any,
         comment: '',
         startDate: getLocalDateString(oneHourAgo),
