@@ -179,7 +179,7 @@ export function EntryFormDialog({
     }
 
     let result
-    if (entry && entry.id) {
+    if (entry && entry.id !== undefined) {
       result = await updateTimeEntry({ id: entry.id, ...payload })
     } else {
       result = await createTimeEntry(payload)
@@ -194,7 +194,7 @@ export function EntryFormDialog({
       return
     }
 
-    if (entry && entry.id) {
+    if (entry && entry.id !== undefined) {
       toast.success('Time entry updated', {
         description: `Entry #${entry.id} has been successfully updated.`,
       })
