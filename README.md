@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Memtime Tracker
+
+A secure serverless application built with **Next.js 15**, leveraging Server Actions for maximum security. All API requests are handled server-to-server, ensuring that sensitive API secrets are never exposed to the client.
+
+## Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router & Server Actions)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## Features
+
+- **Maximum Security**: Server-to-server request pattern via Server Actions. API keys remain strictly server-side, preventing exposure in browser network logs.
+- **Clients Tree View**: A hierarchical, navigable view of all clients.
+  - Drill down from **Clients** → **Projects** → **Tasks**.
+  - Intelligent caching of already opened tree items for a snappy user experience.
+- **Time Entry Management**: Full-featured table view for time entries.
+  - Create, Edit, and Delete entries with ease.
+  - Beautifully integrated Date and Time pickers for precise tracking.
+- **Advanced Rate Limiting**: Intelligent protection against API abuse.
+  - **Global Cooldown**: Persistent counter that shows a useful message to the user when limited.
+  - **Live Feedback**: Real-time countdown in the UI during cooldown periods.
+- **Optimized Layers**:
+  - **Pagination Cache**: Prevents spamming pagination limits, reducing unnecessary API load.
+  - **Client-Side Tree Cache**: Instant reopening of previously loaded projects and tasks.
+  - **Native Next.js Fetch Cache**: Revalidation patterns to keep data fresh yet performant.
+
+## Specifications
+
+1.  **Tree View**: Complete hierarchical navigation for all Client → Project → Task relationships.
+2.  **Time Management**: Comprehensive CRUD operations for work entries within a responsive, modern table.
 
 ## Getting Started
 
-First, run the development server:
+### Environment Variables
+
+Create a `.env` file in the root directory and add your Memtime API credentials:
+
+```env
+MEMTIME_API_URL=your_api_url
+MEMTIME_API_KEY=your_api_key
+```
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
