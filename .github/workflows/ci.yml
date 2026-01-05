@@ -22,8 +22,3 @@ jobs:
         run: npm run format:check
       - name: Run ESLint
         run: npm run lint
-      - name: Build
-        run: npm run build
-        env:
-          MEMTIME_API_URL: ${{ secrets.MEMTIME_API_URL }}
-          MEMTIME_API_KEY: ${{ secrets.MEMTIME_API_KEY }}
